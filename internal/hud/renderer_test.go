@@ -1,6 +1,7 @@
 package hud
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -32,10 +33,12 @@ func TestRender(t *testing.T) {
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:                "a-a-a-aaaaabe vigoda",
-				LastBuildFinishTime: time.Now(),
-				LastBuildError:      "oh no the build failed",
-				LastBuildLog:        "1\n2\n3\nthe compiler did not understand!\n5\n6\n7\n8\n",
+				Name: "a-a-a-aaaaabe vigoda",
+				BuildHistory: []model.BuildStatus{{
+					FinishTime: time.Now(),
+					Error:      fmt.Errorf("oh no the build failed"),
+					Log:        []byte("1\n2\n3\nthe compiler did not understand!\n5\n6\n7\n8\n"),
+				}},
 			},
 		},
 	}
@@ -44,10 +47,11 @@ func TestRender(t *testing.T) {
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:                "a-a-a-aaaaabe vigoda",
-				LastBuildFinishTime: time.Now(),
-				LastBuildError:      "oh no the build failed",
-				LastBuildLog: `STEP 1/2 — Building Dockerfile: [gcr.io/windmill-public-containers/servantes/snack]
+				Name: "a-a-a-aaaaabe vigoda",
+				BuildHistory: []model.BuildStatus{{
+					FinishTime: time.Now(),
+					Error:      fmt.Errorf("oh no the build failed"),
+					Log: []byte(`STEP 1/2 — Building Dockerfile: [gcr.io/windmill-public-containers/servantes/snack]
   │ Tarring context…
   │ Applying via kubectl
     ╎ Created tarball (size: 11 kB)
@@ -58,7 +62,8 @@ func TestRender(t *testing.T) {
     ╎   → # github.com/windmilleng/servantes/snack
 src/github.com/windmilleng/servantes/snack/main.go:16:36: syntax error: unexpected newline, expecting comma or }
 
-ERROR: ImageBuild: executor failed running [/bin/sh -c go install github.com/windmilleng/servantes/snack]: exit code 2`,
+ERROR: ImageBuild: executor failed running [/bin/sh -c go install github.com/windmilleng/servantes/snack]: exit code 2`),
+				}},
 			},
 		},
 	}
@@ -67,9 +72,11 @@ ERROR: ImageBuild: executor failed running [/bin/sh -c go install github.com/win
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:           "a-a-a-aaaaabe vigoda",
-				LastBuildError: "oh no the build failed",
-				LastBuildLog:   "1\n2\n3\nthe compiler wasn't smart enough to figure out what you meant!\n5\n6\n7\n8\n",
+				Name: "a-a-a-aaaaabe vigoda",
+				BuildHistory: []model.BuildStatus{{
+					Error: fmt.Errorf("oh no the build failed"),
+					Log:   []byte("1\n2\n3\nthe compiler wasn't smart enough to figure out what you meant!\n5\n6\n7\n8\n"),
+				}},
 			},
 		},
 	}
@@ -97,9 +104,11 @@ ERROR: ImageBuild: executor failed running [/bin/sh -c go install github.com/win
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:           "a-a-a-aaaaabe vigoda",
-				LastBuildError: "broken go code!",
-				LastBuildLog:   "mashing keys is not a good way to generate code",
+				Name: "a-a-a-aaaaabe vigoda",
+				BuildHistory: []model.BuildStatus{{
+					Error: fmt.Errorf("broken go code!"),
+					Log:   []byte("mashing keys is not a good way to generate code"),
+				}},
 			},
 		},
 	}
@@ -109,24 +118,27 @@ ERROR: ImageBuild: executor failed running [/bin/sh -c go install github.com/win
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:                  "a-a-a-aaaaabe vigoda",
-				DirectoriesWatched:    []string{"foo", "bar"},
-				LastDeployTime:        ts,
-				LastBuildEdits:        []string{"main.go", "cli.go"},
-				LastBuildError:        "the build failed!",
-				LastBuildFinishTime:   ts,
-				LastBuildDuration:     1400 * time.Millisecond,
-				LastBuildLog:          "",
-				PendingBuildEdits:     []string{"main.go", "cli.go", "vigoda.go"},
-				PendingBuildSince:     ts,
-				CurrentBuildEdits:     []string{"main.go"},
-				CurrentBuildStartTime: ts,
-				PodName:               "vigoda-pod",
-				PodCreationTime:       ts,
-				PodStatus:             "Running",
-				PodRestarts:           1,
-				Endpoints:             []string{"1.2.3.4:8080"},
-				PodLog:                "1\n2\n3\n4\nabe vigoda is now dead\n5\n6\n7\n8\n",
+				Name:               "a-a-a-aaaaabe vigoda",
+				DirectoriesWatched: []string{"foo", "bar"},
+				LastDeployTime:     ts,
+				BuildHistory: []model.BuildStatus{{
+					Edits:      []string{"main.go", "cli.go"},
+					Error:      fmt.Errorf("the build failed!"),
+					FinishTime: ts,
+					StartTime:  ts.Add(-1400 * time.Millisecond),
+				}},
+				PendingBuildEdits: []string{"main.go", "cli.go", "vigoda.go"},
+				PendingBuildSince: ts,
+				CurrentBuild: model.BuildStatus{
+					Edits:     []string{"main.go"},
+					StartTime: ts,
+				},
+				PodName:         "vigoda-pod",
+				PodCreationTime: ts,
+				PodStatus:       "Running",
+				PodRestarts:     1,
+				Endpoints:       []string{"1.2.3.4:8080"},
+				PodLog:          "1\n2\n3\n4\nabe vigoda is now dead\n5\n6\n7\n8\n",
 			},
 		},
 	}
@@ -136,21 +148,23 @@ ERROR: ImageBuild: executor failed running [/bin/sh -c go install github.com/win
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:                  "abe vigoda",
-				DirectoriesWatched:    []string{"foo", "bar"},
-				LastDeployTime:        ts,
-				LastBuildEdits:        []string{"main.go"},
-				PendingBuildEdits:     []string{},
-				PendingBuildSince:     ts,
-				CurrentBuildEdits:     []string{},
-				CurrentBuildStartTime: ts,
-				CurrentBuildReason:    model.BuildReasonFlagCrash,
-				PodName:               "vigoda-pod",
-				PodCreationTime:       ts,
-				PodStatus:             "Running",
-				PodRestarts:           0,
-				Endpoints:             []string{"1.2.3.4:8080"},
-				CrashLog:              "1\n2\n3\n4\nabe vigoda is now dead\n5\n6\n7\n8\n",
+				Name:               "abe vigoda",
+				DirectoriesWatched: []string{"foo", "bar"},
+				LastDeployTime:     ts,
+				BuildHistory: []model.BuildStatus{{
+					Edits: []string{"main.go"},
+				}},
+				PendingBuildSince: ts,
+				CurrentBuild: model.BuildStatus{
+					StartTime: ts,
+					Reason:    model.BuildReasonFlagCrash,
+				},
+				PodName:         "vigoda-pod",
+				PodCreationTime: ts,
+				PodStatus:       "Running",
+				PodRestarts:     0,
+				Endpoints:       []string{"1.2.3.4:8080"},
+				CrashLog:        "1\n2\n3\n4\nabe vigoda is now dead\n5\n6\n7\n8\n",
 			},
 		},
 	}
@@ -159,18 +173,19 @@ ERROR: ImageBuild: executor failed running [/bin/sh -c go install github.com/win
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:                "vigoda",
-				DirectoriesWatched:  []string{"foo", "bar"},
-				LastDeployTime:      ts,
-				LastBuildEdits:      []string{"main.go", "cli.go"},
-				LastBuildFinishTime: ts,
-				LastBuildDuration:   1400 * time.Millisecond,
-				LastBuildLog:        "",
-				PodName:             "vigoda-pod",
-				PodCreationTime:     ts,
-				PodStatus:           "Running",
-				PodRestarts:         1,
-				Endpoints:           []string{"1.2.3.4:8080"},
+				Name:               "vigoda",
+				DirectoriesWatched: []string{"foo", "bar"},
+				LastDeployTime:     ts,
+				BuildHistory: []model.BuildStatus{{
+					Edits:      []string{"main.go", "cli.go"},
+					FinishTime: ts,
+					StartTime:  ts.Add(-1400 * time.Millisecond),
+				}},
+				PodName:         "vigoda-pod",
+				PodCreationTime: ts,
+				PodStatus:       "Running",
+				PodRestarts:     1,
+				Endpoints:       []string{"1.2.3.4:8080"},
 				PodLog: `abe vigoda is crashing
 oh noooooooooooooooooo nooooooooooo noooooooooooo nooooooooooo
 oh noooooooooooooooooo nooooooooooo noooooooooooo nooooooooooo nooooooooooo noooooooooooo nooooooooooo
@@ -185,12 +200,13 @@ oh noooooooooooooooooo nooooooooooo noooooooooooo nooooooooooo`,
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:                "GlobalYAML",
-				LastBuildFinishTime: ts,
-				LastBuildDuration:   1400 * time.Millisecond,
-				LastDeployTime:      ts,
-				LastBuildError:      "",
-				IsYAMLManifest:      true,
+				Name: "GlobalYAML",
+				BuildHistory: []model.BuildStatus{{
+					FinishTime: ts,
+					StartTime:  ts.Add(-1400 * time.Millisecond),
+				}},
+				LastDeployTime: ts,
+				IsYAMLManifest: true,
 			},
 		},
 	}
@@ -203,9 +219,11 @@ oh noooooooooooooooooo nooooooooooo noooooooooooo nooooooooooo`,
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:                  "vigoda",
-				CurrentBuildStartTime: ts.Add(-5 * time.Second),
-				CurrentBuildEdits:     []string{"main.go"},
+				Name: "vigoda",
+				CurrentBuild: model.BuildStatus{
+					StartTime: ts.Add(-5 * time.Second),
+					Edits:     []string{"main.go"},
+				},
 			},
 		},
 	}
@@ -227,7 +245,9 @@ oh noooooooooooooooooo nooooooooooo noooooooooooo nooooooooooo`,
 			{
 				Name:           "vigoda",
 				LastDeployTime: ts.Add(-5 * time.Second),
-				LastBuildEdits: []string{"abbot.go", "costello.go", "harold.go"},
+				BuildHistory: []model.BuildStatus{{
+					Edits: []string{"abbot.go", "costello.go", "harold.go"},
+				}},
 			},
 		},
 	}
@@ -261,15 +281,17 @@ func TestRenderLogModal(t *testing.T) {
 	v := view.View{
 		Resources: []view.Resource{
 			{
-				Name:                "vigoda",
-				LastBuildStartTime:  now.Add(-time.Minute),
-				LastBuildFinishTime: now,
-				LastBuildLog: `STEP 1/2 — Building Dockerfile: [gcr.io/windmill-public-containers/servantes/snack]
+				Name: "vigoda",
+				BuildHistory: []model.BuildStatus{{
+					StartTime:  now.Add(-time.Minute),
+					FinishTime: now,
+					Log: []byte(`STEP 1/2 — Building Dockerfile: [gcr.io/windmill-public-containers/servantes/snack]
   │ Tarring context…
   │ Applying via kubectl
     ╎ Created tarball (size: 11 kB)
   │ Building image
-`,
+`),
+				}},
 				PodName:         "vigoda-pod",
 				PodCreationTime: now,
 				PodLog:          "serving on 8080",
@@ -283,14 +305,18 @@ func TestRenderLogModal(t *testing.T) {
 	v = view.View{
 		Resources: []view.Resource{
 			{
-				Name:                  "vigoda",
-				LastBuildFinishTime:   now.Add(-time.Minute),
-				CurrentBuildStartTime: now,
-				CurrentBuildLog:       "building!",
-				CurrentBuildReason:    model.BuildReasonFlagCrash,
-				PodName:               "vigoda-pod",
-				PodCreationTime:       now,
-				CrashLog:              "panic!",
+				Name: "vigoda",
+				BuildHistory: []model.BuildStatus{{
+					FinishTime: now.Add(-time.Minute),
+				}},
+				CurrentBuild: model.BuildStatus{
+					StartTime: now,
+					Log:       []byte("building!"),
+					Reason:    model.BuildReasonFlagCrash,
+				},
+				PodName:         "vigoda-pod",
+				PodCreationTime: now,
+				CrashLog:        "panic!",
 			},
 		},
 	}
@@ -334,11 +360,13 @@ func TestAutoCollapseModes(t *testing.T) {
 	badView := view.View{
 		Resources: []view.Resource{
 			{
-				Name:                "vigoda",
-				DirectoriesWatched:  []string{"bar"},
-				LastBuildFinishTime: time.Now(),
-				LastBuildError:      "oh no the build failed",
-				LastBuildLog:        "1\n2\n3\nthe compiler did not understand!\n5\n6\n7\n8\n",
+				Name:               "vigoda",
+				DirectoriesWatched: []string{"bar"},
+				BuildHistory: []model.BuildStatus{{
+					FinishTime: time.Now(),
+					Error:      fmt.Errorf("oh no the build failed"),
+					Log:        []byte("1\n2\n3\nthe compiler did not understand!\n5\n6\n7\n8\n"),
+				}},
 			},
 		},
 	}
@@ -359,15 +387,17 @@ func TestPodPending(t *testing.T) {
 	v := view.View{
 		Resources: []view.Resource{
 			{
-				Name:                "vigoda",
-				LastBuildStartTime:  ts,
-				LastBuildFinishTime: ts,
-				LastBuildLog: `STEP 1/2 — Building Dockerfile: [gcr.io/windmill-public-containers/servantes/snack]
+				Name: "vigoda",
+				BuildHistory: []model.BuildStatus{{
+					StartTime:  ts,
+					FinishTime: ts,
+					Log: []byte(`STEP 1/2 — Building Dockerfile: [gcr.io/windmill-public-containers/servantes/snack]
   │ Tarring context…
   │ Applying via kubectl
     ╎ Created tarball (size: 11 kB)
   │ Building image
-`,
+`),
+				}},
 				PodName:        "vigoda-pod",
 				PodLog:         "serving on 8080",
 				PodStatus:      "",
@@ -393,17 +423,19 @@ func TestPodLogContainerUpdate(t *testing.T) {
 	v := view.View{
 		Resources: []view.Resource{
 			{
-				Name:                "vigoda",
-				PodName:             "vigoda-pod",
-				PodStatus:           "Running",
-				Endpoints:           []string{"1.2.3.4:8080"},
-				PodLog:              "Serving on 8080",
-				LastBuildLog:        "Building (1/2)\nBuilding (2/2)\n",
-				PodUpdateStartTime:  ts,
-				PodCreationTime:     ts.Add(-time.Minute),
-				LastBuildStartTime:  ts,
-				LastBuildFinishTime: ts,
-				LastDeployTime:      ts,
+				Name:      "vigoda",
+				PodName:   "vigoda-pod",
+				PodStatus: "Running",
+				Endpoints: []string{"1.2.3.4:8080"},
+				PodLog:    "Serving on 8080",
+				BuildHistory: []model.BuildStatus{{
+					Log:        []byte("Building (1/2)\nBuilding (2/2)\n"),
+					StartTime:  ts,
+					FinishTime: ts,
+				}},
+				PodUpdateStartTime: ts,
+				PodCreationTime:    ts.Add(-time.Minute),
+				LastDeployTime:     ts,
 			},
 		},
 	}
